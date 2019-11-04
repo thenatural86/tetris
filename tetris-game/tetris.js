@@ -4,7 +4,7 @@ const cvs = document.getElementById("tetris")
 const ctx = cvs.getContext("2d")
 // game board has 10 columns and 20 rows
 const ROW = 20
-const COL = 10
+const COL = (COLUMN = 10)
 const SQ = (squareSize = 20)
 // empty square color
 const VACANT = "WHITE"
@@ -100,62 +100,116 @@ Piece.prototype.unDraw = function() {
   this.fill(VACANT)
 }
 
-p.draw()
-
 // Move piece down
 Piece.prototype.moveDown = function() {
-  this.unDraw()
-  // increments the y position by 1 square
-  this.y++
-  // draw piece in new position
-  this.draw()
+  if (!this.collision(0, 1, this.activeTetromino)) {
+    this.unDraw()
+    // increments the y position by 1 square
+    this.y++
+    // draw piece in new position
+    this.draw()
+  } else {
+    // we lock the piece and generate a new one
+  }
 }
 
 // move a piece to the right
 Piece.prototype.moveRight = function() {
-  this.unDraw()
-  // increments the x position by 1 square
-  this.x++
-  // draw piece in new position
-  this.draw()
+  if (!this.collision(1, 0, this.activeTetromino)) {
+    this.unDraw()
+    // increments the x position by 1 square
+    this.x++
+    // draw piece in new position
+    this.draw()
+  }
 }
 
 // move a piece to the left
 Piece.prototype.moveLeft = function() {
-  this.unDraw()
-  // decrements the x position by 1 square
-  this.x--
-  // draw piece in new position
-  this.draw()
+  if (!this.collision(-1, 0, this.activeTetromino)) {
+    this.unDraw()
+    // decrements the x position by 1 square
+    this.x--
+    // draw piece in new position
+    this.draw()
+  }
 }
 
 // rotate the piece
 Piece.prototype.rotate = function() {
-  this.unDraw()
-  this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length
-  this.activeTetromino = this.tetromino[this.tetrominoN]
-  this.draw()
+  let nextPattern = this.tetromino[
+    (this.tetrominoN + 1) % this.tetromino.length
+  ]
+  let kick = 0
+
+  if (this.collision(0, 0, nextPattern)) {
+    if (this.x > COL / 2) {
+      kick = -1
+    } else {
+      kick = 1
+    }
+  }
+  if (!this.collision(kick, 0, nextPattern)) {
+    this.unDraw()
+    this.x += kick
+    this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length
+    this.activeTetromino = this.tetromino[this.tetrominoN]
+    this.draw()
+  }
 }
 
-//collision function
+//collision detection function. Before any movement of a piece (right, left, down, rotation) we have to check if that movement will lead to a collision. Check if there will be a collision, if false do the movement, if true, don't do the movement. Therefore function needs to now the piece and its future coordinates so we pass in x, y and piece as parameters.
+Piece.prototype.collision = function(x, y, piece) {
+  // loop over all the tetromino squares
+  for (r = 0; r < piece.length; r++) {
+    for (c = 0; c < piece.length; c++) {
+      // if square is empty, skip
+      if (!piece[r][c]) {
+        continue
+      }
+      //  coordinates of the piece after moving
+      // this.x + c and this.y + r are the coordinates of any square, then plus x or plus y is the coordinate for the new square     after movement.
+
+      let newX = this.x + c + x
+      let newY = this.y + r + y
+
+      // conditions: newX < 0 (left border);newX >= COL(right border);newY >= ROW(the bottom)
+      if (newX < 0 || newX >= COL || newY >= ROW) {
+        return true
+      }
+      // skip newY < 0; board[-1] will crash
+      if (newY < 0) {
+        continue
+      }
+      // check if there is a locked pieced already in place, if square if not vacant
+      if (board[newY][newX] != VACANT) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
 // control the piece, whenever the player presses a key down the control function fires off
 document.addEventListener("keydown", CONTROL)
 // every key on keyboard has a code, if the code corresponds to one of the below codes run the control function
 function CONTROL(event) {
+  // 37 corresponds to left arrow
   if (event.keyCode == 37) {
-    console.log(event)
     p.moveLeft()
     dropStart = Date.now()
+    // 38 corresponds to left arrow
   } else if (event.keyCode == 38) {
     p.rotate()
     dropStart = Date.now()
+    // 39 corresponds to left arrow
   } else if (event.keyCode == 39) {
     p.moveRight()
     dropStart = Date.now()
+    // 40 corresponds to left arrow
   } else if (event.keyCode == 40) {
     p.moveDown()
-    dropStart = Date.now()
+    // dropStart = Date.now()
   }
 }
 
