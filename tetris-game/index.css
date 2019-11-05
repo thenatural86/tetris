@@ -2,9 +2,23 @@ body {
   background-color: aqua;
 }
 
+
 #tetris {
   margin: auto;
   margin-left: 40vw;
   margin-top: 10vh;
   padding: 10px;
+  width: 280px
+}
+
+#score {
+  display: inline-block;
+
+}
+
+.score {
+  font-size: 25px;
+  font-weight: bold;
+  font-family: monospace;
+  text-align: center;
 }

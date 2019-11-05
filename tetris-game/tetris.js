@@ -2,6 +2,7 @@
 const cvs = document.getElementById("tetris")
 // the getContext method called on canvas returns an object that provides methods and properties for drawing on the canvas
 const ctx = cvs.getContext("2d")
+const scoreElement = document.getElementById("score")
 // game board has 10 columns and 20 rows
 const ROW = 20
 const COL = (COLUMN = 10)
@@ -58,8 +59,14 @@ const PIECES = [
   [J, "orange"]
 ]
 
+// generate random pieces
+function randomPiece() {
+  let r = Math.floor(Math.random() * PIECES.length)
+  return new Piece(PIECES[r][0], PIECES[r][1])
+}
+
 // initiate a piece
-let p = new Piece(PIECES[0][0], PIECES[0][1])
+let p = randomPiece()
 
 // Create the Piece Object
 // parameters
@@ -110,6 +117,8 @@ Piece.prototype.moveDown = function() {
     this.draw()
   } else {
     // we lock the piece and generate a new one
+    this.lock()
+    p = randomPiece()
   }
 }
 
@@ -156,6 +165,51 @@ Piece.prototype.rotate = function() {
     this.activeTetromino = this.tetromino[this.tetrominoN]
     this.draw()
   }
+}
+
+let score = 0
+Piece.prototype.lock = function() {
+  for (r = 0; r < this.activeTetromino.length; r++) {
+    for (c = 0; c < this.activeTetromino.length; c++) {
+      // skip vacant squares
+      if (!this.activeTetromino[r][c]) {
+        continue
+      }
+      // pieces to lock on top = game over
+      if (this.y + r < 0) {
+        alert("Game Over :(")
+        // stop request animation frame
+        gameOver = true
+        break
+      }
+      // lock the piece
+      board[this.y + r][this.x + c] = this.color
+    }
+  }
+  // remove full rows
+  for (r = 0; r < ROW; r++) {
+    let isRowFull = true
+    for (c = 0; c < COL; c++) {
+      isRowFull = isRowFull && board[r][c] != VACANT
+    }
+    if (isRowFull) {
+      // if the row is full
+      // we move down all the rows above it
+      for (y = r; y > 1; y--) {
+        for (c = 0; c < COL; c++) {
+          board[y][c] = board[y - 1][c]
+        }
+      }
+      // the top row board[0][..] has no row above it
+      for (c = 0; c < COL; c++) {
+        board[0][c] = VACANT
+      }
+      // increment the score
+      score += 10
+    }
+  }
+  drawBoard()
+  scoreElement.innerHTML = score
 }
 
 //collision detection function. Before any movement of a piece (right, left, down, rotation) we have to check if that movement will lead to a collision. Check if there will be a collision, if false do the movement, if true, don't do the movement. Therefore function needs to now the piece and its future coordinates so we pass in x, y and piece as parameters.
@@ -215,6 +269,7 @@ function CONTROL(event) {
 
 // drop the piece every 1 second
 let dropStart = Date.now()
+let gameOver = false
 function drop() {
   let now = Date.now()
   let delta = now - dropStart
@@ -222,7 +277,9 @@ function drop() {
     p.moveDown()
     dropStart = Date.now()
   }
-  requestAnimationFrame(drop)
+  if (!gameOver) {
+    requestAnimationFrame(drop)
+  }
 }
 
 drop()
