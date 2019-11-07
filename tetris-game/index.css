@@ -1,5 +1,9 @@
 body {
   background-color: aqua;
+  background-image: url("https://i.pinimg.com/originals/90/b8/eb/90b8ebe8ca7b774b017242e5bd51dc29.gif");
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* height: 772px */
 }
 
 

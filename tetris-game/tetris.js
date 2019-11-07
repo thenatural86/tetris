@@ -8,7 +8,7 @@ const ROW = 20
 const COL = (COLUMN = 10)
 const SQ = (squareSize = 20)
 // empty square color
-const VACANT = "WHITE"
+const VACANT = "#336BA4"
 
 // getContext methods, draw a square
 function drawSquare(x, y, color) {
@@ -51,7 +51,7 @@ drawBoard()
 // pieces and the colors
 const PIECES = [
   [Z, "red"],
-  [S, "green"],
+  [S, "lime"],
   [T, "yellow"],
   [O, "blue"],
   [L, "purple"],
@@ -109,6 +109,7 @@ Piece.prototype.unDraw = function() {
 
 // Move piece down
 Piece.prototype.moveDown = function() {
+  // check to see if there is no collision before making a movement
   if (!this.collision(0, 1, this.activeTetromino)) {
     this.unDraw()
     // increments the y position by 1 square
@@ -124,6 +125,7 @@ Piece.prototype.moveDown = function() {
 
 // move a piece to the right
 Piece.prototype.moveRight = function() {
+  // check to see if there is no collision before making a movement
   if (!this.collision(1, 0, this.activeTetromino)) {
     this.unDraw()
     // increments the x position by 1 square
@@ -135,6 +137,7 @@ Piece.prototype.moveRight = function() {
 
 // move a piece to the left
 Piece.prototype.moveLeft = function() {
+  // check to see if there is no collision before making a movement
   if (!this.collision(-1, 0, this.activeTetromino)) {
     this.unDraw()
     // decrements the x position by 1 square
@@ -145,24 +148,35 @@ Piece.prototype.moveLeft = function() {
 }
 
 // rotate the piece
+// go through the tetromino piece patterns and increment through the array of patterns
 Piece.prototype.rotate = function() {
   let nextPattern = this.tetromino[
+    // cannot use strict increment to cycle through pattern, so use the modulo operator, i.e
+    //  0 + 1 % 4 = 1; 3 + 1 % 4 = 1
     (this.tetrominoN + 1) % this.tetromino.length
   ]
   let kick = 0
-
+  // checking to see if there is a collision,
   if (this.collision(0, 0, nextPattern)) {
+    // checking to see which side the collision happens on, if right wall, the kick is -1, moving the piece 1 over to the left
     if (this.x > COL / 2) {
       kick = -1
+      // if it's the left wall, we kick to 1, moving the piece 1 over to the right
     } else {
       kick = 1
     }
   }
+  // check to see if there is no collision with the kick, if there us not,
   if (!this.collision(kick, 0, nextPattern)) {
+    // undraw the piece
     this.unDraw()
+    // then kick the piece
     this.x += kick
+    // increment the tetromino number
     this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length
+    // update active tetromino
     this.activeTetromino = this.tetromino[this.tetrominoN]
+    // then draw the pattern
     this.draw()
   }
 }
@@ -217,8 +231,9 @@ Piece.prototype.collision = function(x, y, piece) {
   // loop over all the tetromino squares
   for (r = 0; r < piece.length; r++) {
     for (c = 0; c < piece.length; c++) {
-      // if square is empty, skip
+      // if this tetromino square is not occupied, skip
       if (!piece[r][c]) {
+        // continue key word?
         continue
       }
       //  coordinates of the piece after moving
@@ -227,15 +242,15 @@ Piece.prototype.collision = function(x, y, piece) {
       let newX = this.x + c + x
       let newY = this.y + r + y
 
-      // conditions: newX < 0 (left border);newX >= COL(right border);newY >= ROW(the bottom)
+      // if new x coordinate is less than 0 which is the left wall border, or new x coordinate is greater than column, or new y is greater than row, then true, there is a collision
       if (newX < 0 || newX >= COL || newY >= ROW) {
         return true
       }
-      // skip newY < 0; board[-1] will crash
+      // skip newY < 0; board[-1] will crash game, no index with -1
       if (newY < 0) {
         continue
       }
-      // check if there is a locked pieced already in place, if square if not vacant
+      // check if there is a locked pieced already in place so that the tetromino doesn't go through locked piece, if square if not vacant, return true and there is a collision
       if (board[newY][newX] != VACANT) {
         return true
       }
